@@ -1,0 +1,90 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: #0d1117;
+  color: #e6edf3;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  padding: 2rem;
+}
+
+#app {
+  width: 100%;
+  max-width: 960px;
+}
+
+h1 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+}
+
+.chart-container {
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.chart-container canvas {
+  width: 100% !important;
+}
+
+.items-table {
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.items-table h2 {
+  font-size: 1.1rem;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #30363d;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  text-align: left;
+  padding: 0.6rem 1rem;
+  border-bottom: 1px solid #21262d;
+  font-size: 0.875rem;
+}
+
+th {
+  color: #8b949e;
+  font-weight: 500;
+}
+
+.status-done {
+  color: #3fb950;
+}
+
+.status-in-progress {
+  color: #d29922;
+}
+
+.status-todo {
+  color: #8b949e;
+}
+
+.loading, .error {
+  text-align: center;
+  padding: 4rem 1rem;
+  color: #8b949e;
+}
+
+.error {
+  color: #f85149;
+}

@@ -1,0 +1,19 @@
+{
+  "name": "burndown-chart",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "chart.js": "^4.5.1",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5"
+  }
+}
