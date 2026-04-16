@@ -1,29 +1,24 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import Chart from "chart.js/auto";
 import "./style.css";
-
-interface BurndownData {
-  dates: string[];
-  actual: (number | null)[];
-  ideal: number[];
-  totalWorkload: number;
-}
-
-interface ProjectItem {
-  title: string;
-  workload: number;
-  status: string;
-  closedAt: string | null;
-}
+import type { BurndownPoint, ProjectItem } from "./schema";
 
 interface ApiResponse {
   items: ProjectItem[];
-  burndown: BurndownData;
+  burndown: {
+    series: BurndownPoint[];
+    totalWorkload: number;
+  };
   error?: string;
 }
 
-function BurndownChart({ data }: { data: BurndownData }) {
+function formatDate(d: string) {
+  const date = new Date(d + "T00:00:00");
+  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
+function BurndownChart({ series }: { series: BurndownPoint[] }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const chartRef = useRef<Chart | null>(null);
 
@@ -31,45 +26,84 @@ function BurndownChart({ data }: { data: BurndownData }) {
     if (!canvasRef.current) return;
     chartRef.current?.destroy();
 
+    const labels = series.map((p) => formatDate(p.date));
+    const lastActualIdx = series.findLastIndex((p) => !p.isFuture);
+
     chartRef.current = new Chart(canvasRef.current, {
       type: "line",
       data: {
-        labels: data.dates.map((d) => {
-          const date = new Date(d + "T00:00:00");
-          return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-        }),
+        labels,
         datasets: [
           {
+            label: "Low Priority",
+            data: series.map((p, i) => (i <= lastActualIdx ? p.Low : null)),
+            borderColor: "#58a6ff",
+            backgroundColor: "rgba(88, 166, 255, 0.6)",
+            fill: "origin",
+            pointRadius: 0,
+            tension: 0.1,
+          },
+          {
+            label: "Medium Priority",
+            data: series.map((p, i) => (i <= lastActualIdx ? p.Low + p.Medium : null)),
+            borderColor: "#d29922",
+            backgroundColor: "rgba(210, 153, 34, 0.6)",
+            fill: "-1",
+            pointRadius: 0,
+            tension: 0.1,
+          },
+          {
+            label: "High Priority",
+            data: series.map((p, i) => (i <= lastActualIdx ? p.Low + p.Medium + p.High : null)),
+            borderColor: "#f85149",
+            backgroundColor: "rgba(248, 81, 73, 0.6)",
+            fill: "-1",
+            pointRadius: 0,
+            tension: 0.1,
+          },
+          {
             label: "Ideal",
-            data: data.ideal,
-            borderColor: "#30363d",
+            data: series.map((p) => p.ideal),
+            borderColor: "#8b949e",
             borderDash: [6, 4],
             borderWidth: 2,
             pointRadius: 0,
+            fill: false,
             tension: 0,
-          },
-          {
-            label: "Actual",
-            data: data.actual,
-            borderColor: "#58a6ff",
-            borderWidth: 2.5,
-            pointRadius: 3,
-            pointBackgroundColor: "#58a6ff",
-            tension: 0,
-            spanGaps: false,
+            order: -1,
           },
         ],
       },
       options: {
         responsive: true,
+        interaction: {
+          mode: "index",
+          intersect: false,
+        },
         plugins: {
           legend: {
-            labels: { color: "#8b949e", usePointStyle: true, pointStyle: "line" },
+            labels: {
+              color: "#8b949e",
+              usePointStyle: true,
+              pointStyle: "rectRounded",
+            },
           },
           tooltip: {
             callbacks: {
-              label: (ctx) =>
-                `${ctx.dataset.label}: ${ctx.parsed.y?.toFixed(1) ?? "—"} points`,
+              label: (ctx) => {
+                if (ctx.dataset.label === "Ideal") {
+                  return `${ctx.dataset.label}: ${ctx.parsed.y?.toFixed(1) ?? "—"} points`;
+                }
+                // For stacked areas, show the actual priority value
+                const point = series[ctx.dataIndex];
+                if (!point) return "";
+                const name = ctx.dataset.label;
+                let value = 0;
+                if (name === "High Priority") value = point.High;
+                else if (name === "Medium Priority") value = point.Medium;
+                else if (name === "Low Priority") value = point.Low;
+                return `${name}: ${value} points`;
+              },
             },
           },
         },
@@ -80,16 +114,21 @@ function BurndownChart({ data }: { data: BurndownData }) {
           },
           y: {
             beginAtZero: true,
+            stacked: false,
             ticks: { color: "#8b949e" },
             grid: { color: "#21262d" },
-            title: { display: true, text: "Remaining workload", color: "#8b949e" },
+            title: {
+              display: true,
+              text: "Remaining workload",
+              color: "#8b949e",
+            },
           },
         },
       },
     });
 
     return () => chartRef.current?.destroy();
-  }, [data]);
+  }, [series]);
 
   return <canvas ref={canvasRef} />;
 }
@@ -99,6 +138,14 @@ function statusClass(status: string) {
   if (s === "done") return "status-done";
   if (s.includes("progress")) return "status-in-progress";
   return "status-todo";
+}
+
+function priorityClass(priority: string) {
+  const p = priority.toLowerCase();
+  if (p.includes("high") || p === "p0" || p === "urgent" || p === "critical")
+    return "priority-high";
+  if (p.includes("medium") || p === "p1" || p === "normal") return "priority-medium";
+  return "priority-low";
 }
 
 function App() {
@@ -124,17 +171,16 @@ function App() {
     <>
       <h1>Sprint Burndown</h1>
       <div className="chart-container">
-        <BurndownChart data={burndown} />
+        <BurndownChart series={burndown.series} />
       </div>
       <div className="items-table">
-        <h2>
-          Sprint Items — {burndown.totalWorkload} total points
-        </h2>
+        <h2>Sprint Items — {burndown.totalWorkload} total points</h2>
         <table>
           <thead>
             <tr>
               <th>Title</th>
               <th>Workload</th>
+              <th>Priority</th>
               <th>Status</th>
               <th>Completed</th>
             </tr>
@@ -150,6 +196,7 @@ function App() {
                 <tr key={i}>
                   <td>{item.title}</td>
                   <td>{item.workload}</td>
+                  <td className={priorityClass(item.priority)}>{item.priority}</td>
                   <td className={statusClass(item.status)}>{item.status}</td>
                   <td>
                     {item.closedAt

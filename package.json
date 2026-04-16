@@ -1,8 +1,15 @@
 {
   "name": "burndown-chart",
-  "module": "index.ts",
-  "type": "module",
   "private": true,
+  "type": "module",
+  "module": "index.ts",
+  "dependencies": {
+    "chart.js": "^4.5.1",
+    "oxfmt": "^0.45.0",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
+    "valibot": "^1.3.1"
+  },
   "devDependencies": {
     "@types/bun": "latest",
     "@types/react": "^19.2.14",
@@ -10,10 +17,5 @@
   },
   "peerDependencies": {
     "typescript": "^5"
-  },
-  "dependencies": {
-    "chart.js": "^4.5.1",
-    "react": "^19.2.5",
-    "react-dom": "^19.2.5"
   }
 }
