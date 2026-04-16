@@ -2,7 +2,10 @@
   "name": "burndown-chart",
   "private": true,
   "type": "module",
-  "module": "index.ts",
+  "module": "src/server.ts",
+  "scripts": {
+    "start": "bun run src/server.ts"
+  },
   "dependencies": {
     "chart.js": "^4.5.1",
     "oxfmt": "^0.45.0",

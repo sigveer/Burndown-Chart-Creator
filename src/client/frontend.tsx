@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import Chart from "chart.js/auto";
 import "./style.css";
-import type { BurndownPoint, ProjectItem } from "./schema";
+import type { BurndownPoint, ProjectItem } from "../schema.ts";
 
 interface ApiResponse {
   items: ProjectItem[];

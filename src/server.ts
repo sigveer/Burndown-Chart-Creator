@@ -1,4 +1,4 @@
-import index from "./index.html";
+import index from "./client/index.html";
 import * as v from "valibot";
 import {
   EnvSchema,
@@ -6,7 +6,7 @@ import {
   type Env,
   type ProjectItem,
   type BurndownPoint,
-} from "./schema";
+} from "./schema.ts";
 
 let env: Env;
 try {
@@ -151,7 +151,7 @@ function buildBurndownData(items: ProjectItem[]) {
   const completedByDatePriority = new Map<string, Record<Priority, number>>();
   for (const item of items) {
     if (item.status === env.fields.doneStatus && item.closedAt) {
-      const date = item.closedAt.split("T")[0];
+      const date = item.closedAt.split("T")[0]!;
       if (!completedByDatePriority.has(date)) {
         completedByDatePriority.set(date, { High: 0, Medium: 0, Low: 0 });
       }
@@ -161,11 +161,10 @@ function buildBurndownData(items: ProjectItem[]) {
   }
 
   // Build burndown series
-  const today = new Date().toISOString().split("T")[0];
+  const today = new Date().toISOString().split("T")[0]!;
   const series: BurndownPoint[] = [];
 
-  for (let i = 0; i < dates.length; i++) {
-    const date = dates[i];
+  for (const [i, date] of dates.entries()) {
     const completed = completedByDatePriority.get(date);
     if (completed) {
       for (const p of PRIORITIES) remaining[p] -= completed[p];
