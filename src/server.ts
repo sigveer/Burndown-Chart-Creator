@@ -125,10 +125,14 @@ function buildBurndownData(items: ProjectItem[]) {
   const end = new Date(env.timeRange.end);
   const totalWorkload = items.reduce((sum, i) => sum + i.workload, 0);
 
-  // Build list of dates in the sprint
+  // Build list of dates in the sprint, excluding specified dates
+  const excludedDatesSet = new Set(env.excludedDates);
   const dates: string[] = [];
   for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-    dates.push(d.toISOString().split("T")[0]!);
+    const dateStr = d.toISOString().split("T")[0]!;
+    if (!excludedDatesSet.has(dateStr)) {
+      dates.push(dateStr);
+    }
   }
 
   // Initial remaining workload per priority

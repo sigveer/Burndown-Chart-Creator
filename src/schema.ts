@@ -33,6 +33,8 @@ export const EnvSchema = v.pipe(
 
     SPRINT_NAME: v.optional(v.string()),
 
+    EXCLUDED_DATES: v.optional(v.string(), ""),
+
     PORT: v.pipe(v.optional(v.string(), "3000"), v.transform(Number), v.number()),
   }),
   v.transform(
@@ -51,6 +53,7 @@ export const EnvSchema = v.pipe(
       SPRINT_NAME,
       SPRINT_START,
       SPRINT_END,
+      EXCLUDED_DATES,
       PORT,
       ...v
     }) => ({
@@ -73,6 +76,7 @@ export const EnvSchema = v.pipe(
         start: SPRINT_START,
         end: SPRINT_END,
       },
+      excludedDates: EXCLUDED_DATES.split(",").filter(Boolean),
       sprintName: SPRINT_NAME,
       port: PORT,
       ...v,
