@@ -199,8 +199,8 @@ function App() {
                   <td className={priorityClass(item.priority)}>{item.priority}</td>
                   <td className={statusClass(item.status)}>{item.status}</td>
                   <td>
-                    {item.closedAt
-                      ? new Date(item.closedAt).toLocaleDateString("en-US", {
+                    {item.completedAt
+                      ? new Date(item.completedAt).toLocaleDateString("en-US", {
                           month: "short",
                           day: "numeric",
                         })

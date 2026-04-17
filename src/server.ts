@@ -70,17 +70,15 @@ async function fetchProjectItems(): Promise<ProjectItem[]> {
                       title
                       field { ... on ProjectV2IterationField { name } }
                     }
+                    ... on ProjectV2ItemFieldDateValue {
+                      date
+                      field { ... on ProjectV2Field { name } }
+                    }
                   }
                 }
                 content {
-                  ... on Issue {
-                    title
-                    closedAt
-                  }
-                  ... on PullRequest {
-                    title
-                    closedAt
-                  }
+                  ... on Issue { title }
+                  ... on PullRequest { title }
                 }
               }
             }
@@ -94,9 +92,7 @@ async function fetchProjectItems(): Promise<ProjectItem[]> {
     const ownerData = env.github.ownerType === "user" ? data.user : data.organization;
     const project = ownerData.projectV2;
     if (!project)
-      throw new Error(
-        `Project #${env.github.projectNumber} not found for ${env.github.owner}`,
-      );
+      throw new Error(`Project #${env.github.projectNumber} not found for ${env.github.owner}`);
 
     const page = project.items;
     for (const node of page.nodes) {
@@ -118,15 +114,9 @@ const PRIORITIES: Priority[] = ["High", "Medium", "Low"];
 
 function normalizePriority(p: string): Priority {
   const lower = p.toLowerCase();
-  if (
-    lower.includes("high") ||
-    lower === "p0" ||
-    lower === "urgent" ||
-    lower === "critical"
-  )
+  if (lower.includes("high") || lower === "p0" || lower === "urgent" || lower === "critical")
     return "High";
-  if (lower.includes("medium") || lower === "p1" || lower === "normal")
-    return "Medium";
+  if (lower.includes("medium") || lower === "p1" || lower === "normal") return "Medium";
   return "Low";
 }
 
@@ -150,13 +140,12 @@ function buildBurndownData(items: ProjectItem[]) {
   // Group completed workload by date and priority
   const completedByDatePriority = new Map<string, Record<Priority, number>>();
   for (const item of items) {
-    if (item.status === env.fields.doneStatus && item.closedAt) {
-      const date = item.closedAt.split("T")[0]!;
+    if (item.status === env.fields.doneStatus && item.completedAt) {
+      const date = item.completedAt.split("T")[0]!;
       if (!completedByDatePriority.has(date)) {
         completedByDatePriority.set(date, { High: 0, Medium: 0, Low: 0 });
       }
-      completedByDatePriority.get(date)![normalizePriority(item.priority)] +=
-        item.workload;
+      completedByDatePriority.get(date)![normalizePriority(item.priority)] += item.workload;
     }
   }
 
@@ -186,7 +175,7 @@ function buildBurndownData(items: ProjectItem[]) {
 }
 
 Bun.serve({
-  port: 3000,
+  port: env.port,
   routes: {
     "/": index,
     "/api/burndown": {
@@ -207,4 +196,4 @@ Bun.serve({
   },
 });
 
-console.log("Burndown chart server running at http://localhost:3000");
+console.log(`Burndown chart server running at http://localhost:${env.port}`);
